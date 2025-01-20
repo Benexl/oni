@@ -31,7 +31,23 @@ int main(int argc, char *argv[]) {
   char *anime_id =
       cJSON_GetObjectItemCaseSensitive(selected_anime, "id")->valuestring;
   cJSON *anime = get_anime(anime_id);
-  printf("%s\n", cJSON_PrintUnformatted(anime));
+  char translation_type[3];
+
+  printf("Preferred translation type (sub/dub): ");
+  scanf("%s", translation_type);
+  cJSON *episodes = cJSON_GetObjectItemCaseSensitive(
+      cJSON_GetObjectItemCaseSensitive(anime, "availableEpisodes"),
+      translation_type);
+  cJSON *episode_item;
+  char episode[5];
+  cJSON_ArrayForEach(episode_item, episodes) {
+    printf("%s\n", episode_item->valuestring);
+  }
+  printf("Select Episode You Want to stream: ");
+  scanf("%s", episode);
+  printf("Anime: %s; translationType: %s; Episode: %s",
+         cJSON_GetObjectItemCaseSensitive(anime, "title")->valuestring,
+         translation_type, episode);
 
   // clean up
   cJSON_Delete(search_results_json);

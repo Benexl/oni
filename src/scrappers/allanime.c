@@ -89,7 +89,7 @@ cJSON *_execute_graphql_query(const char *query, cJSON *variables) {
 
 cJSON *search_for_anime(const char *search_keywords,
                         const char *translation_type, int nsfw, int unknown,
-                        int limit, int page, const char *country_of_origin) {
+                        int per_page, int page, const char *country_of_origin) {
   // Create the variables JSON object
   cJSON *variables = cJSON_CreateObject();
 
@@ -101,7 +101,7 @@ cJSON *search_for_anime(const char *search_keywords,
 
   // Add the search object and other variables
   cJSON_AddItemToObject(variables, "search", search);
-  cJSON_AddNumberToObject(variables, "limit", limit);
+  cJSON_AddNumberToObject(variables, "limit", per_page);
   cJSON_AddNumberToObject(variables, "page", page);
   cJSON_AddStringToObject(variables, "translationtype", translation_type);
   cJSON_AddStringToObject(variables, "countryorigin", country_of_origin);
@@ -159,4 +159,59 @@ cJSON *search_for_anime(const char *search_keywords,
   cJSON_Delete(search_results);
 
   return result;
+}
+
+cJSON *get_anime(const char *id) {
+  // Create variables object
+  cJSON *variables = cJSON_CreateObject();
+  cJSON_AddStringToObject(variables, "showId", id);
+
+  // Execute GraphQL query
+  cJSON *anime_json = _execute_graphql_query(GQL_GET_ANIME, variables);
+  if (!anime_json) {
+    fprintf(stderr, "Failed to get anime json\n");
+    cJSON_Delete(variables); // Clean up variables
+    return NULL;
+  }
+
+  // Extract the "show" object
+  cJSON *show = cJSON_GetObjectItemCaseSensitive(anime_json, "show");
+  if (!show) {
+    fprintf(stderr, "Missing 'show' in anime json\n");
+    cJSON_Delete(anime_json);
+    cJSON_Delete(variables);
+    return NULL;
+  }
+
+  // Create the anime object
+  cJSON *anime = cJSON_CreateObject();
+
+  // Add fields to anime object (with null checks)
+  cJSON *id_item = cJSON_GetObjectItemCaseSensitive(show, "_id");
+  if (id_item && id_item->valuestring) {
+    cJSON_AddStringToObject(anime, "id", id_item->valuestring);
+  }
+
+  cJSON *title_item = cJSON_GetObjectItemCaseSensitive(show, "name");
+  if (title_item && title_item->valuestring) {
+    cJSON_AddStringToObject(anime, "title", title_item->valuestring);
+  }
+
+  cJSON *episodes_item =
+      cJSON_GetObjectItemCaseSensitive(show, "availableEpisodesDetail");
+  if (episodes_item) {
+    cJSON_AddItemToObject(anime, "availableEpisodes",
+                          cJSON_Duplicate(episodes_item, 1)); // Deep copy
+  }
+
+  cJSON *type_item = cJSON_GetObjectItemCaseSensitive(show, "__typename");
+  if (type_item && type_item->valuestring) {
+    cJSON_AddStringToObject(anime, "type", type_item->valuestring);
+  }
+
+  // Clean up
+  cJSON_Delete(anime_json);
+  cJSON_Delete(variables);
+
+  return anime;
 }

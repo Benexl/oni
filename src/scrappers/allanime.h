@@ -42,11 +42,23 @@
     } \
 }"
 
+#define GQL_GET_ANIME                                                          \
+  "\
+  query ($showId: String!) {\
+  show(_id: $showId) {\
+    _id\
+    name\
+    availableEpisodesDetail\
+  }\
+}\
+"
+
+// prototypes
 cJSON *search_for_anime(const char *search_keywords,
                         const char *translation_type, int nsfw, int unknown,
                         int limit, int page, const char *country_of_origin);
-char *get_anime(const char *id, const char *translation_type);
-char *get_episode_streams(const char *id, const char *episode,
-                          const char *translation_type);
+cJSON *get_anime(const char *id);
+cJSON *get_episode_streams(const char *id, const char *episode,
+                           const char *translation_type);
 
 #endif

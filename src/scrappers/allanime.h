@@ -53,6 +53,25 @@
 }\
 "
 
+#define GQL_GET_EPISODE_STREAMS                                                \
+  "\
+query (\
+  $showId: String!\
+  $translationType: VaildTranslationTypeEnumType!\
+  $episodeString: String!\
+) {\
+  episode(\
+    showId: $showId\
+    translationType: $translationType\
+    episodeString: $episodeString\
+  ) {\
+    episodeString\
+    sourceUrls\
+    notes\
+  }\
+}\
+"
+
 // prototypes
 cJSON *search_for_anime(const char *search_keywords,
                         const char *translation_type, int nsfw, int unknown,
